@@ -112,18 +112,6 @@ public class MovieAnalyzer {
     }
   }
 
-
-//  public static Stream<Movie> readMovies(String filename) throws IOException {
-////    Stream<Movie> movieStream = HashMap
-//
-//    return Files.lines(Paths.get(filename), StandardCharsets.UTF_8)
-//            .map(l -> l.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)", -1))
-//            .map(a -> new Movie(a[1], Integer.parseInt(a[2]), a[3],
-//                    Integer.parseInt(a[4].split(" ")[0]), a[5].replace("\"", "").split(","), Float.parseFloat(a[6]),
-//                    a[7], Integer.parseInt(a[8]), a[9], a[10], a[11], a[12], a[13],
-//                    Long.parseLong(a[14]), Long.parseLong(a[15].replace(",", "").replace("\"", ""))
-//            ));
-//  }
   public static Stream<Movie> readMovies(String filename) throws IOException {
 //    Stream<Movie> movieStream = HashMap
     Set<Movie> movieSet = new HashSet<>();
@@ -136,11 +124,11 @@ public class MovieAnalyzer {
       for (int i = 0; i < gen.length; i++) {
         gen[i] = gen[i].strip();
       }
-      movieSet.add(new Movie(a[1], Integer.parseInt(a[2]), a[3],
+      movieSet.add(new Movie(checkString(a[1]), Integer.parseInt(a[2]), a[3],
               Integer.parseInt(a[4].split(" ")[0]),
               gen,
               a[6].equals("")?0:Float.parseFloat(a[6]),
-              a[7],
+              checkString(a[7]),
               a[8].equals("")? 0: Integer.parseInt(a[8]), a[9], a[10], a[11], a[12], a[13],
               a[14].equals("") ? 0:Long.parseLong(a[14]),
               a[15].equals("") ? 0 :Long.parseLong(a[15].replace(",", "").replace("\"", ""))
@@ -149,21 +137,12 @@ public class MovieAnalyzer {
     }
 
     return movieSet.stream();
-
-//    return Files.lines(Paths.get(filename), StandardCharsets.UTF_8)
-//            .map(l -> l.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)", -1))
-//            .map(a -> new Movie(a[1], Integer.parseInt(a[2]), a[3],
-//                    Integer.parseInt(a[4].split(" ")[0]), a[5].replace("\"", "").split(","), Float.parseFloat(a[6]),
-//                    a[7], Integer.parseInt(a[8]), a[9], a[10], a[11], a[12], a[13],
-//                    Long.parseLong(a[14]), Long.parseLong(a[15].replace(",", "").replace("\"", ""))
-//            ));
   }
 
   public MovieAnalyzer(String dataset_path) throws IOException {
     movies = readMovies(dataset_path);
 
   }
-
 
   public class MapSort {
 
@@ -227,6 +206,12 @@ public class MovieAnalyzer {
 
   }
 
+  public static String checkString(String s){
+    if (s.charAt(0)=='\"'){
+      return String.valueOf(s.toCharArray(),1,s.length()-2);
+    }
+    return s;
+  }
   public Map<Integer, Integer> getMovieCountByYear() {
 
     Map<Integer, Integer> MovieCountByYear = movies.collect(Collectors.groupingBy(Movie::getReleased_Year,Collectors.summingInt(x -> 1)));
@@ -331,7 +316,105 @@ public class MovieAnalyzer {
     return res;
   }
 
+  public double[] countRating(double[] doubles, float rating){
+    doubles[0] += 1;
+    doubles[1] += rating;
+    return doubles;
+  }
+  public double[] countGross(double[] doubles, long gross){
+    doubles[0] += 1;
+    doubles[1] += gross;
+    return doubles;
+  }
   public List<String> getTopStars(int top_k, String by){
+    List<String> res = new ArrayList<>();
+    if (by.equals("rating")){
+      Map<String, double[]> starsRating = new HashMap<>();
+      movies.forEach(a -> {
+        String[] name = new String[4];
+        name[0] = a.getStar1();
+        name[1] = a.getStar2();
+        name[2] = a.getStar3();
+        name[3] = a.getStar4();
 
+        for (int i = 0; i < 4; i++) {
+          if (starsRating.containsKey(name[i])){
+            starsRating.put(name[i],countRating(starsRating.get(name[i]),a.getIMDB_Rating()));
+          }else {
+            starsRating.put(name[i],new double[]{1,a.getIMDB_Rating()});
+          }
+        }
+      });
+      Map<String, Double> avgRating = new HashMap<>();
+
+      for(Map.Entry<String, double[]> entry : starsRating.entrySet()){
+        avgRating.put(entry.getKey(),entry.getValue()[1]/entry.getValue()[0]);
+      }
+      Map<String, Double> finalAvgRating = new HashMap<>();
+      finalAvgRating = MapSort.sortByValueDesc(avgRating);
+      int cnt = 0;
+      for (String s:finalAvgRating.keySet()
+      ) {
+        res.add(s);
+        cnt++;
+        if (cnt==top_k)
+          break;
+      }
+    }else if (by.equals("gross")){
+      Map<String, double[]> starsGross = new HashMap<>();
+      movies.forEach(a -> {
+        String[] name = new String[4];
+        name[0] = a.getStar1();
+        name[1] = a.getStar2();
+        name[2] = a.getStar3();
+        name[3] = a.getStar4();
+
+        for (int i = 0; i < 4; i++) {
+          if (starsGross.containsKey(name[i])){
+            starsGross.put(name[i],countGross(starsGross.get(name[i]),a.getGross()));
+          }else {
+            starsGross.put(name[i],new double[]{1,a.getGross()});
+          }
+        }
+      });
+      Map<String, Double> avgGross = new HashMap<>();
+
+      for(Map.Entry<String, double[]> entry : starsGross.entrySet()){
+        avgGross.put(entry.getKey(),entry.getValue()[1]/entry.getValue()[0]);
+      }
+      Map<String, Double> finalAvgGross = new HashMap<>();
+      finalAvgGross = MapSort.sortByValueDesc(avgGross);
+      int cnt = 0;
+      for (String s:finalAvgGross.keySet()
+      ) {
+        res.add(s);
+        cnt++;
+        if (cnt==top_k)
+          break;
+      }
+    }
+    return res;
+  }
+  public boolean checkMovies(String genre, String[] curArr){
+    for (int i = 0; i < curArr.length; i++) {
+      if (genre.equals(curArr[i]))
+        return true;
+    }
+    return false;
+  }
+  public List<String> searchMovies(String genre, float min_rating, int max_runtime){
+    List<String> res = new ArrayList<>();
+    movies.forEach(a -> {
+      if (checkMovies(genre,a.getGenre()) && a.getIMDB_Rating()>=min_rating && a.getRuntime()<=max_runtime && a.getRuntime()!=0 && a.getIMDB_Rating()!=0)
+        res.add(a.getSeries_Title());
+    });
+    Collections.sort(res, new Comparator<String>() {
+      @Override
+      public int compare(String s1, String s2) {
+        return s1.compareTo(s2);
+      }
+    });
+
+    return res;
   }
 }

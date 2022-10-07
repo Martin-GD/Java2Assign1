@@ -138,7 +138,7 @@ public class MovieAnalyzerLocalTest {
       Method method = movieAnalyzerClass.getMethod("getMovieCountByYear");
       Object res = method.invoke(imdbTop);
       assertTrue(res instanceof Map<?, ?>);
-      String expected = Files.readString(Paths.get("resources", "answers_local", "Q1.txt"),
+      String expected = Files.readString(Paths.get("../resources", "answers_local", "Q1.txt"),
                       StandardCharsets.UTF_8)
               .replace("\r", "").strip();
       assertTrue(compareMapWithoutOrder(res, expected, 1));
