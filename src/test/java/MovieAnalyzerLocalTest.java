@@ -138,7 +138,7 @@ public class MovieAnalyzerLocalTest {
       Method method = movieAnalyzerClass.getMethod("getMovieCountByYear");
       Object res = method.invoke(imdbTop);
       assertTrue(res instanceof Map<?, ?>);
-      String expected = Files.readString(Paths.get("../resources", "answers_local", "Q1.txt"),
+      String expected = Files.readString(Paths.get("resources", "answers_local", "Q1.txt"),
                       StandardCharsets.UTF_8)
               .replace("\r", "").strip();
       assertTrue(compareMapWithoutOrder(res, expected, 1));
@@ -244,6 +244,9 @@ public class MovieAnalyzerLocalTest {
       String expected3 = Files.readString(Paths.get("resources", "answers_local", "Q4_3.txt"),
                       StandardCharsets.UTF_8)
               .replace("\r", "").strip();
+      for (int i = 0; i < ((List<?>) res3).size(); i++) {
+        System.out.println(((List<?>) res3).get(i));
+      }
       assertTrue(compareListWithoutOrder(res3, expected3));
     } catch (NoSuchMethodException | IllegalAccessException |
              InvocationTargetException | IOException e) {
@@ -389,7 +392,11 @@ public class MovieAnalyzerLocalTest {
       String expected3 = Files.readString(Paths.get("resources", "answers_local", "Q5_6.txt"),
                       StandardCharsets.UTF_8)
               .replace("\r", "").strip();
+      for (int i = 0; i < ((List<?>) res3).size(); i++) {
+        System.out.println(((List<?>) res3).get(i));
+      }
       assertTrue(compareListWithoutOrder(res3, expected3));
+
     } catch (NoSuchMethodException | IllegalAccessException |
              InvocationTargetException | IOException e) {
       e.printStackTrace();

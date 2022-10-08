@@ -11,9 +11,10 @@ import java.util.stream.Stream;
 
 public class MovieAnalyzer {
 //  public static Stream<Movie> moives;
-  private Stream<Movie> movies;
+  private Set<Movie> movies;
 
   public static class Movie {
+    private String URL;
     private String Series_Title;
     private int Released_Year;
     private String Certificate;
@@ -30,10 +31,11 @@ public class MovieAnalyzer {
     private long No_of_Votes;
     private long Gross;
 
-    public Movie(String series_Title, int released_Year, String certificate,
+    public Movie(String URL, String series_Title, int released_Year, String certificate,
                  int runtime, String[] genre, float IMDB_Rating, String overview,
                  int meta_score, String director, String star1, String star2,
                  String star3, String star4, long no_of_Votes, long gross) {
+      this.URL = URL;
       Series_Title = series_Title;
       Released_Year = released_Year;
       Certificate = certificate;
@@ -99,6 +101,10 @@ public class MovieAnalyzer {
       return Star3;
     }
 
+    public String getURL() {
+      return URL;
+    }
+
     public String getStar4() {
       return Star4;
     }
@@ -112,7 +118,7 @@ public class MovieAnalyzer {
     }
   }
 
-  public static Stream<Movie> readMovies(String filename) throws IOException {
+  public static Set<Movie> readMovies(String filename) throws IOException {
 //    Stream<Movie> movieStream = HashMap
     Set<Movie> movieSet = new HashSet<>();
     BufferedReader sb = new BufferedReader(new FileReader(new File(filename),StandardCharsets.UTF_8));
@@ -124,7 +130,7 @@ public class MovieAnalyzer {
       for (int i = 0; i < gen.length; i++) {
         gen[i] = gen[i].strip();
       }
-      movieSet.add(new Movie(checkString(a[1]), Integer.parseInt(a[2]), a[3],
+      movieSet.add(new Movie(a[0], checkString(a[1]), Integer.parseInt(a[2]), a[3],
               Integer.parseInt(a[4].split(" ")[0]),
               gen,
               a[6].equals("")?0:Float.parseFloat(a[6]),
@@ -136,12 +142,22 @@ public class MovieAnalyzer {
       cur = sb.readLine();
     }
 
-    return movieSet.stream();
+    return movieSet;
   }
+
 
   public MovieAnalyzer(String dataset_path) throws IOException {
     movies = readMovies(dataset_path);
 
+  }
+
+  public String findTitle(String url){
+    List<String> s = new ArrayList<>();
+    movies.stream().forEach(a->{
+      if (url.equals(a.getURL()))
+        s.add(a.getSeries_Title());
+    });
+    return s.get(0);
   }
 
   public class MapSort {
@@ -160,6 +176,35 @@ public class MovieAnalyzer {
       if (((Comparable) o2.getValue()).compareTo(o1.getValue())!=0) {
         return ((Comparable) o2.getValue()).compareTo(o1.getValue());
       }else return ((Comparable) o2.getKey()).compareTo(o1.getKey());
+    };
+    private static Comparator<Map.Entry> compForGenre = (Map.Entry o1, Map.Entry o2) -> {
+      if (((Comparable) o2.getValue()).compareTo(o1.getValue())!=0) {
+        return ((Comparable) o2.getValue()).compareTo(o1.getValue());
+      }else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+    };
+
+
+    private static Comparator<Map.Entry> compForQ4Overview = (Map.Entry o1, Map.Entry o2) -> {
+      if ( o2.getValue().toString().length()-o1.getValue().toString().length()!=0) {
+        return o2.getValue().toString().length()-o1.getValue().toString().length();
+      }else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+    };
+
+    private static Comparator<Map.Entry> compForQ4Runtime = (Map.Entry o1, Map.Entry o2) -> {
+      if (((Comparable) o2.getValue()).compareTo(o1.getValue())!=0) {
+        return ((Comparable) o2.getValue()).compareTo(o1.getValue());
+      }else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+    };
+
+    private static Comparator<Map.Entry> compForQ5Rating = (Map.Entry o1, Map.Entry o2) -> {
+      if (((Comparable) o2.getValue()).compareTo(o1.getValue())!=0) {
+        return ((Comparable) o2.getValue()).compareTo(o1.getValue());
+      }else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+    };
+    private static Comparator<Map.Entry> compForQ5Gross = (Map.Entry o1, Map.Entry o2) -> {
+      if (((Comparable) o2.getValue()).compareTo(o1.getValue())!=0) {
+        return ((Comparable) o2.getValue()).compareTo(o1.getValue());
+      }else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
     };
     public static <K, V> Map<K, V> sortByKeyAsc(Map<K, V> originMap) {
       if (originMap == null) {
@@ -214,7 +259,7 @@ public class MovieAnalyzer {
   }
   public Map<Integer, Integer> getMovieCountByYear() {
 
-    Map<Integer, Integer> MovieCountByYear = movies.collect(Collectors.groupingBy(Movie::getReleased_Year,Collectors.summingInt(x -> 1)));
+    Map<Integer, Integer> MovieCountByYear = movies.stream().collect(Collectors.groupingBy(Movie::getReleased_Year,Collectors.summingInt(x -> 1)));
 
 
     return MapSort.sortByKeyDesc(MovieCountByYear);
@@ -223,7 +268,7 @@ public class MovieAnalyzer {
   public Map<String, Integer> getMovieCountByGenre(){
 //    Map<String, Integer> MovieCountByGenre = movies.collect(Collectors.groupingBy(,Collectors.summingInt(x -> 1)))
     Map<String, Integer> MovieCountByGenre = new HashMap<>();
-    movies.forEach(a -> {
+    movies.stream().forEach(a -> {
       String[] genre = a.getGenre();
       for (int i = 0; i < genre.length; i++) {
         if (MovieCountByGenre.containsKey(genre[i]))
@@ -233,14 +278,14 @@ public class MovieAnalyzer {
       }
     });
 
-    return MapSort.sortByValueDesc(MovieCountByGenre);
+    return MapSort.sort(MovieCountByGenre,MapSort.compForGenre);
   }
 
 
   public Map<List<String>, Integer> getCoStarCount(){
     Map<List<String>, Integer> CoStarCount = new HashMap<>();
 
-    movies.forEach(a->{
+    movies.stream().forEach(a->{
       String[] name = new String[4];
       name[0] = a.getStar1();
       name[1] = a.getStar2();
@@ -279,29 +324,51 @@ public class MovieAnalyzer {
     if (by.equals("runtime")){
 
       Map<String, Integer> runTime = new HashMap<>();
-      movies.forEach(a -> {
-        runTime.put(a.getSeries_Title(), a.getRuntime());
+      movies.stream().forEach(a -> {
+        runTime.put(a.getURL(), a.getRuntime());
       });
-      Map<String, Integer> finalRunTime = MapSort.sortForTopMovies(runTime);
-//      System.out.println(finalRunTime);
-      int cnt = 0;
-      for (String s:finalRunTime.keySet()
-           ) {
-        res.add(s);
-        cnt++;
-        if (cnt==top_k)
-          break;
 
+      List<String[]> ans = new ArrayList<>();
+      Map<String, Integer> URLRunTime = MapSort.sort(runTime,MapSort.compForQ4Runtime);
+//      Map<String, Integer> trans = new HashMap<>();
+//      System.out.println(finalRunTime);
+
+
+      for (Map.Entry<String, Integer> s:URLRunTime.entrySet()
+           ) {
+        ans.add(new String[]{findTitle(s.getKey()),""+s.getValue()});
+//        trans.put(findTitle(s.getKey()),s.getValue());
       }
 
+//      Map<String, Integer> finalRunTime = MapSort.sort(trans,MapSort.compForQ4Runtime);
+      Collections.sort(ans, new Comparator<String[]>() {
+        @Override
+        public int compare(String[] s1, String[] s2) {
+          if (Integer.parseInt(s2[1])-Integer.parseInt(s1[1])!=0)
+            return Integer.parseInt(s2[1])-Integer.parseInt(s1[1]);
+          else return s1[0].compareTo(s2[0]);
+        }
+      });
+      for (int i = 0; i < top_k; i++) {
+        res.add(ans.get(i)[0]);
+      }
 
     }
     else if (by.equals("overview")){
       Map<String, String> overView = new HashMap<>();
-      movies.forEach(a -> {
-        overView.put(a.getSeries_Title(), a.getOverview());
+      movies.stream().forEach(a -> {
+        overView.put(a.getURL(), a.getOverview());
       });
-      Map<String, String> finalOverView = MapSort.sortByValueDesc(overView);
+      Map<String, String> trans = new HashMap<>();
+//      System.out.println(finalRunTime);
+
+
+      for (Map.Entry<String, String> s:overView.entrySet()
+      ) {
+        trans.put(findTitle(s.getKey()),s.getValue());
+      }
+
+      Map<String, String> finalOverView = MapSort.sort(trans,MapSort.compForQ4Overview);
 
       int cnt = 0;
       for (String s:finalOverView.keySet()
@@ -313,6 +380,13 @@ public class MovieAnalyzer {
 
       }
     }
+    return res;
+  }
+
+  public List<String> movieTitle(String s1, String s2){
+    List<String> res = new ArrayList<>();
+    res.add(s1);
+    res.add(s2);
     return res;
   }
 
@@ -330,7 +404,7 @@ public class MovieAnalyzer {
     List<String> res = new ArrayList<>();
     if (by.equals("rating")){
       Map<String, double[]> starsRating = new HashMap<>();
-      movies.forEach(a -> {
+      movies.stream().forEach(a -> {
         String[] name = new String[4];
         name[0] = a.getStar1();
         name[1] = a.getStar2();
@@ -351,7 +425,7 @@ public class MovieAnalyzer {
         avgRating.put(entry.getKey(),entry.getValue()[1]/entry.getValue()[0]);
       }
       Map<String, Double> finalAvgRating = new HashMap<>();
-      finalAvgRating = MapSort.sortByValueDesc(avgRating);
+      finalAvgRating = MapSort.sort(avgRating,MapSort.compForQ5Rating);
       int cnt = 0;
       for (String s:finalAvgRating.keySet()
       ) {
@@ -362,7 +436,7 @@ public class MovieAnalyzer {
       }
     }else if (by.equals("gross")){
       Map<String, double[]> starsGross = new HashMap<>();
-      movies.forEach(a -> {
+      movies.stream().forEach(a -> {
         String[] name = new String[4];
         name[0] = a.getStar1();
         name[1] = a.getStar2();
@@ -371,9 +445,11 @@ public class MovieAnalyzer {
 
         for (int i = 0; i < 4; i++) {
           if (starsGross.containsKey(name[i])){
-            starsGross.put(name[i],countGross(starsGross.get(name[i]),a.getGross()));
+            if (a.getGross()!=0)
+              starsGross.put(name[i],countGross(starsGross.get(name[i]),a.getGross()));
           }else {
-            starsGross.put(name[i],new double[]{1,a.getGross()});
+            if (a.getGross()!=0)
+              starsGross.put(name[i],new double[]{1,a.getGross()});
           }
         }
       });
@@ -383,7 +459,7 @@ public class MovieAnalyzer {
         avgGross.put(entry.getKey(),entry.getValue()[1]/entry.getValue()[0]);
       }
       Map<String, Double> finalAvgGross = new HashMap<>();
-      finalAvgGross = MapSort.sortByValueDesc(avgGross);
+      finalAvgGross = MapSort.sort(avgGross, MapSort.compForQ5Gross);
       int cnt = 0;
       for (String s:finalAvgGross.keySet()
       ) {
@@ -404,7 +480,7 @@ public class MovieAnalyzer {
   }
   public List<String> searchMovies(String genre, float min_rating, int max_runtime){
     List<String> res = new ArrayList<>();
-    movies.forEach(a -> {
+    movies.stream().forEach(a -> {
       if (checkMovies(genre,a.getGenre()) && a.getIMDB_Rating()>=min_rating && a.getRuntime()<=max_runtime && a.getRuntime()!=0 && a.getIMDB_Rating()!=0)
         res.add(a.getSeries_Title());
     });
