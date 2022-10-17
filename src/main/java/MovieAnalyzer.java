@@ -182,40 +182,52 @@ public class MovieAnalyzer {
             (Map.Entry o1, Map.Entry o2) -> {
               if (((Comparable) o2.getValue()).compareTo(o1.getValue()) != 0) {
                 return ((Comparable) o2.getValue()).compareTo(o1.getValue());
-              } else return ((Comparable) o2.getKey()).compareTo(o1.getKey());
+              } else {
+                return ((Comparable) o2.getKey()).compareTo(o1.getKey());
+              }
             };
     private static Comparator<Map.Entry> compForGenre =
             (Map.Entry o1, Map.Entry o2) -> {
               if (((Comparable) o2.getValue()).compareTo(o1.getValue()) != 0) {
                 return ((Comparable) o2.getValue()).compareTo(o1.getValue());
-              } else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              } else {
+                return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              }
             };
 
 
     private static Comparator<Map.Entry> compForQ4Overview = (Map.Entry o1, Map.Entry o2) -> {
       if (o2.getValue().toString().length() - o1.getValue().toString().length() != 0) {
         return o2.getValue().toString().length() - o1.getValue().toString().length();
-      } else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+      } else {
+        return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+      }
     };
 
     private static Comparator<Map.Entry> compForQ4Runtime =
             (Map.Entry o1, Map.Entry o2) -> {
               if (((Comparable) o2.getValue()).compareTo(o1.getValue()) != 0) {
                 return ((Comparable) o2.getValue()).compareTo(o1.getValue());
-              } else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              } else {
+                return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              }
             };
 
     private static Comparator<Map.Entry> compForQ5Rating =
             (Map.Entry o1, Map.Entry o2) -> {
               if (((Comparable) o2.getValue()).compareTo(o1.getValue()) != 0) {
                 return ((Comparable) o2.getValue()).compareTo(o1.getValue());
-              } else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              } else {
+                return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              }
             };
     private static Comparator<Map.Entry> compForQ5Gross =
             (Map.Entry o1, Map.Entry o2) -> {
               if (((Comparable) o2.getValue()).compareTo(o1.getValue()) != 0) {
                 return ((Comparable) o2.getValue()).compareTo(o1.getValue());
-              } else return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              } else {
+                return ((Comparable) o1.getKey()).compareTo(o2.getKey());
+              }
             };
 
     public static <K, V> Map<K, V> sortByKeyAsc(Map<K, V> originMap) {
@@ -273,22 +285,23 @@ public class MovieAnalyzer {
 
   public Map<Integer, Integer> getMovieCountByYear() {
 
-    Map<Integer, Integer> MovieCountByYear = movies.stream().collect(Collectors.groupingBy(Movie::getReleased_Year, Collectors.summingInt(x -> 1)));
+    Map<Integer, Integer> MovieCountByYear = movies.stream()
+            .collect(Collectors.groupingBy(Movie::getReleased_Year, Collectors.summingInt(x -> 1)));
 
 
     return MapSort.sortByKeyDesc(MovieCountByYear);
   }
 
   public Map<String, Integer> getMovieCountByGenre() {
-//    Map<String, Integer> MovieCountByGenre = movies.collect(Collectors.groupingBy(,Collectors.summingInt(x -> 1)))
     Map<String, Integer> MovieCountByGenre = new HashMap<>();
     movies.stream().forEach(a -> {
       String[] genre = a.getGenre();
       for (int i = 0; i < genre.length; i++) {
-        if (MovieCountByGenre.containsKey(genre[i]))
+        if (MovieCountByGenre.containsKey(genre[i])) {
           MovieCountByGenre.put(genre[i], MovieCountByGenre.get(genre[i]) + 1);
-        else
+        } else {
           MovieCountByGenre.put(genre[i], 1);
+        }
       }
     });
 
@@ -308,10 +321,12 @@ public class MovieAnalyzer {
       for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
           if (CoStarCount.containsKey(getSortedList(name[i], name[j]))) {
-            CoStarCount.put(getSortedList(name[i], name[j]), CoStarCount.get(getSortedList(name[i], name[j])) + 1);
+            CoStarCount.put(getSortedList(name[i], name[j]),
+                    CoStarCount.get(getSortedList(name[i], name[j])) + 1);
 
-          } else
+          } else {
             CoStarCount.put(getSortedList(name[i], name[j]), 1);
+          }
 
         }
       }
@@ -344,23 +359,21 @@ public class MovieAnalyzer {
 
       List<String[]> ans = new ArrayList<>();
       Map<String, Integer> URLRunTime = MapSort.sort(runTime, MapSort.compForQ4Runtime);
-//      Map<String, Integer> trans = new HashMap<>();
-//      System.out.println(finalRunTime);
 
 
       for (Map.Entry<String, Integer> s : URLRunTime.entrySet()
       ) {
         ans.add(new String[]{findTitle(s.getKey()), "" + s.getValue()});
-//        trans.put(findTitle(s.getKey()),s.getValue());
       }
 
-//      Map<String, Integer> finalRunTime = MapSort.sort(trans,MapSort.compForQ4Runtime);
       Collections.sort(ans, new Comparator<String[]>() {
         @Override
         public int compare(String[] s1, String[] s2) {
-          if (Integer.parseInt(s2[1]) - Integer.parseInt(s1[1]) != 0)
+          if (Integer.parseInt(s2[1]) - Integer.parseInt(s1[1]) != 0) {
             return Integer.parseInt(s2[1]) - Integer.parseInt(s1[1]);
-          else return s1[0].compareTo(s2[0]);
+          } else {
+            return s1[0].compareTo(s2[0]);
+          }
         }
       });
       for (int i = 0; i < top_k; i++) {
@@ -388,8 +401,9 @@ public class MovieAnalyzer {
       ) {
         res.add(s);
         cnt++;
-        if (cnt == top_k)
+        if (cnt == top_k) {
           break;
+        }
 
       }
     }
@@ -446,8 +460,9 @@ public class MovieAnalyzer {
       ) {
         res.add(s);
         cnt++;
-        if (cnt == top_k)
+        if (cnt == top_k) {
           break;
+        }
       }
     } else if (by.equals("gross")) {
       Map<String, double[]> starsGross = new HashMap<>();
@@ -460,11 +475,13 @@ public class MovieAnalyzer {
 
         for (int i = 0; i < 4; i++) {
           if (starsGross.containsKey(name[i])) {
-            if (a.getGross() != 0)
+            if (a.getGross() != 0) {
               starsGross.put(name[i], countGross(starsGross.get(name[i]), a.getGross()));
+            }
           } else {
-            if (a.getGross() != 0)
+            if (a.getGross() != 0) {
               starsGross.put(name[i], new double[]{1, a.getGross()});
+            }
           }
         }
       });
@@ -480,8 +497,9 @@ public class MovieAnalyzer {
       ) {
         res.add(s);
         cnt++;
-        if (cnt == top_k)
+        if (cnt == top_k) {
           break;
+        }
       }
     }
     return res;
@@ -489,8 +507,9 @@ public class MovieAnalyzer {
 
   public boolean checkMovies(String genre, String[] curArr) {
     for (int i = 0; i < curArr.length; i++) {
-      if (genre.equals(curArr[i]))
+      if (genre.equals(curArr[i])) {
         return true;
+      }
     }
     return false;
   }
@@ -498,8 +517,10 @@ public class MovieAnalyzer {
   public List<String> searchMovies(String genre, float min_rating, int max_runtime) {
     List<String> res = new ArrayList<>();
     movies.stream().forEach(a -> {
-      if (checkMovies(genre, a.getGenre()) && a.getIMDB_Rating() >= min_rating && a.getRuntime() <= max_runtime && a.getRuntime() != 0 && a.getIMDB_Rating() != 0)
+      if (checkMovies(genre, a.getGenre()) && a.getIMDB_Rating() >= min_rating
+              && a.getRuntime() <= max_runtime && a.getRuntime() != 0 && a.getIMDB_Rating() != 0) {
         res.add(a.getSeries_Title());
+      }
     });
     Collections.sort(res, new Comparator<String>() {
       @Override
